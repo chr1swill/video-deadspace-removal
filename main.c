@@ -79,7 +79,6 @@ int main(int argc, char **argv) {
      fprintf(stderr, "Error getting stats of dir: %s\n", strerror(errno));
      return -1;
    }
-   printf("Valid dir %s\n", img_dir);
 
    DIR *dir = opendir(img_dir);
    if (dir == NULL) {
@@ -177,6 +176,8 @@ int main(int argc, char **argv) {
      //}
 
 
+     free(img1_path);
+     free(img2_path);
    }
 
    for (int i = 0; i < sorted_entries; i++) {
