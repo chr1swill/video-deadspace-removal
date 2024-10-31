@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
+#include <assert.h>
 #include <png.h>
 
 #define WIDTH 1920
@@ -54,69 +55,138 @@ int compare_images(unsigned char *img1, unsigned char *img2) {
     return diff;
 }
 
+int filter_for_only_files(const struct dirent *entry) {
+  if (entry->d_type != DT_REG) {
+    return 0;
+  }
+  if ((strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)) {
+    return 0;
+  }
+  return 1;
+};
+
 int main(int argc, char **argv) {
    if (argc != 2) {
        fprintf(stderr, "Usage: %s <dir_with_images_files>\n", argv[0]);
-       return 1;
+       return -1;
    }
 
+   char *img_dir = argv[1];
+
    struct stat st = {0};
-   int exist = stat(argv[1], &st);
+   int exist = stat(img_dir, &st);
    if (exist != 0) {
      fprintf(stderr, "Error getting stats of dir: %s\n", strerror(errno));
      return -1;
    }
-   printf("Valid dir %s\n", argv[1]);
+   printf("Valid dir %s\n", img_dir);
 
-   DIR *dir = opendir(argv[1]);
+   DIR *dir = opendir(img_dir);
    if (dir == NULL) {
      fprintf(stderr, "Error opening dir: %s\n", strerror(errno));
      return -1;
    }
 
-   struct dirent *current_entry = {0};
-   while ((current_entry = readdir(dir)) != NULL) {
-     // skip directories
-     if (current_entry->d_type != DT_REG) continue;
-     // skip current direct and parent directory
-     if ((strcmp(current_entry->d_name, ".")) == 0) continue;
-     if ((strcmp(current_entry->d_name, "..")) == 0) continue;
-
-     DIR *hold_dir_p = dir;
-     struct dirent *next_entry = {0};
-     if ((next_entry = readdir(dir)) != NULL) {
-       // skip directories
-       if (current_entry->d_type != DT_REG) {
-         dir = hold_dir_p;
-         continue;
-       }
-       
-       // skip current direct and parent directory
-       if ((strcmp(current_entry->d_name, ".")) == 0) {
-         dir = hold_dir_p;
-         continue;
-       }
-
-       if ((strcmp(current_entry->d_name, "..")) == 0) {
-         dir = hold_dir_p;
-         continue;
-       }
-
-       printf("comparing current dirname = (%s) + next dirname = (%s)\n", current_entry->d_name, next_entry->d_name);
-     }
-
-     // reset dir for next iteration to prevent skipping dir entries for comparing
-     dir = hold_dir_p;
+   int number_of_files = 0;
+   struct dirent *entry = {0};
+   while ((entry = readdir(dir)) != NULL) {
+     if (filter_for_only_files(entry) == 0) continue;
+     number_of_files++;
    }
 
-   if ((closedir(dir)) != 0) {
-     fprintf(stderr, "Error closing dir: %s\n", strerror(errno));
+   if (number_of_files == 0) {
+     fprintf(stderr, "The are no files in the provided directory: %s\n", img_dir);
+     closedir(dir);
+     return -1;
+   } 
+  
+   struct dirent **namelist = malloc(number_of_files * sizeof(struct dirent));
+   if (namelist == NULL) {
+     fprintf(stderr, "Failed to allocate memory for name list.\n");
+     closedir(dir);
      return -1;
    }
 
+   int sorted_entries = scandir(img_dir, &namelist, filter_for_only_files, alphasort);
+   if (sorted_entries == -1) {
+     fprintf(stderr, "Error scanning dir: %s\n", strerror(errno));
+     free(namelist);
+     closedir(dir);
+     return -1;
+   }
+   assert(sorted_entries == number_of_files);
+
+  // for (int i = 0; i < sorted_entries; i++) {
+  //   printf("entry = (%s)\n", namelist[i]->d_name);
+  // }
+
+   for (int i = 1; i < sorted_entries; i++) {
+
+     int img1_buff_len = strlen(img_dir) + strlen(namelist[i-1]->d_name) + 2;
+     char *img1_path = malloc(img1_buff_len * sizeof(char));
+     if (img1_path == NULL) {
+       fprintf(stderr, "Error allocating buffer for image paths\n");
+       free(namelist);
+       closedir(dir);
+       return -1;
+     }
+
+     int img2_buff_len = strlen(img_dir) + strlen(namelist[i]->d_name) + 2;
+     char *img2_path = malloc(img2_buff_len * sizeof(char));
+     if (img2_path == NULL) {
+       fprintf(stderr, "Error allocating buffer for image paths\n");
+       free(namelist);
+       closedir(dir);
+       free(img1_path);
+       return -1;
+     }
+
+     int bytes_wrote1 = snprintf(img1_path, img1_buff_len, "%s/%s", img_dir, namelist[i-1]->d_name);
+     if (bytes_wrote1 < 0) {
+       fprintf(stderr, "Failed to load path form image into buffer image 1.\n");
+       free(namelist);
+       closedir(dir);
+       free(img1_path);
+       free(img2_path);
+       return -1;
+     }
+
+     int bytes_wrote2 = snprintf(img2_path, img2_buff_len, "%s/%s", img_dir, namelist[i]->d_name);
+     if (bytes_wrote2 < 0) {
+       fprintf(stderr, "Failed to load path form image into buffer for image 2.\n");
+       free(namelist);
+       closedir(dir);
+       free(img1_path);
+       free(img2_path);
+       return -1;
+     }
+
+     printf("img1 path = (%s), img2 path = (%s)\n", img1_path, img2_path);
+     //unsigned char *img1 = load_png(img1_path);
+     //unsigned char *img2 = load_png(img2_path);
+
+     //if (img1 == NULL || img2 == NULL) {
+     //  fprintf(stderr, "Error loading images.\n");
+
+     //  for (int i = 0; i < sorted_entries; i++) {
+     //    free(namelist[i]);
+     //  }
+     //  free(namelist);
+     //  closedir(dir);
+     //  return 1;
+     //}
+
+
+   }
+
+   for (int i = 0; i < sorted_entries; i++) {
+     free(namelist[i]);
+   }
+   free(namelist);
+   closedir(dir);
    return 0;
 
-   unsigned char *img1 = load_png(argv[1]);
+   unsigned char *img1 = load_png(img_dir);
    unsigned char *img2 = load_png(argv[2]);
 
    if (!img1 || !img2) {
