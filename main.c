@@ -115,10 +115,6 @@ int main(int argc, char **argv) {
    }
    assert(sorted_entries == number_of_files);
 
-  // for (int i = 0; i < sorted_entries; i++) {
-  //   printf("entry = (%s)\n", namelist[i]->d_name);
-  // }
-
    for (int i = 1; i < sorted_entries; i++) {
 
      int img1_buff_len = strlen(img_dir) + strlen(namelist[i-1]->d_name) + 2;
@@ -160,24 +156,34 @@ int main(int argc, char **argv) {
        return -1;
      }
 
-     printf("img1 path = (%s), img2 path = (%s)\n", img1_path, img2_path);
-     //unsigned char *img1 = load_png(img1_path);
-     //unsigned char *img2 = load_png(img2_path);
+     //printf("img1 path = (%s), img2 path = (%s)\n", img1_path, img2_path);
+     unsigned char *img1 = load_png(img1_path);
+     unsigned char *img2 = load_png(img2_path);
 
-     //if (img1 == NULL || img2 == NULL) {
-     //  fprintf(stderr, "Error loading images.\n");
+     if (img1 == NULL || img2 == NULL) {
+       fprintf(stderr, "Error loading images.\n");
 
-     //  for (int i = 0; i < sorted_entries; i++) {
-     //    free(namelist[i]);
-     //  }
-     //  free(namelist);
-     //  closedir(dir);
-     //  return 1;
-     //}
+       for (int i = 0; i < sorted_entries; i++) {
+         free(namelist[i]);
+       }
+       free(namelist);
+       closedir(dir);
+       free(img1_path);
+       free(img2_path);
+       return 1;
+     }
 
+     int diff = compare_images(img1, img2); 
+     if (diff == 0) {
+       printf("frames %s and %s are the same\n", img1_path, img2_path);
+     } else {
+       printf("frames %s and %s are the this different = %d\n", img1_path, img2_path, diff);
+     }
 
      free(img1_path);
+     free(img1);
      free(img2_path);
+     free(img2);
    }
 
    for (int i = 0; i < sorted_entries; i++) {
