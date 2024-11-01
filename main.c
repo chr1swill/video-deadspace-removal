@@ -156,7 +156,6 @@ int main(int argc, char **argv) {
        return -1;
      }
 
-     //printf("img1 path = (%s), img2 path = (%s)\n", img1_path, img2_path);
      unsigned char *img1 = load_png(img1_path);
      unsigned char *img2 = load_png(img2_path);
 
@@ -175,7 +174,6 @@ int main(int argc, char **argv) {
 
      int diff = compare_images(img1, img2); 
      if (diff == 0) {
-       // printf("frames %s and %s are the same\n", img1_path, img2_path);
        // delete first path
        printf("removing file %s\n", img1_path);
        if ((remove(img1_path)) == -1) {
