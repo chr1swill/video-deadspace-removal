@@ -2,4 +2,6 @@
 
 set xe
 
-gcc -o main main.c -lpng -o3 -Wall -Wextra
+mkdir -p bin
+
+gcc -o bin/main main.c -lpng -O3 -Wall -Wextra
