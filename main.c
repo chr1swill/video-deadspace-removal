@@ -175,7 +175,12 @@ int main(int argc, char **argv) {
 
      int diff = compare_images(img1, img2); 
      if (diff == 0) {
-       printf("frames %s and %s are the same\n", img1_path, img2_path);
+       // printf("frames %s and %s are the same\n", img1_path, img2_path);
+       // delete first path
+       printf("removing file %s\n", img1_path);
+       if ((remove(img1_path)) == -1) {
+         fprintf(stderr, "Error occured removing %s: %s\n", img1_path, strerror(errno));
+       }
      } else {
        printf("frames %s and %s are the this different = %d\n", img1_path, img2_path, diff);
      }
