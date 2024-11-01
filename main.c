@@ -65,6 +65,23 @@ int filter_for_only_files(const struct dirent *entry) {
   return 1;
 };
 
+char *get_img_path(char *img_dir, char *d_name) {
+  int img1_buff_len = strlen(img_dir) + strlen(d_name) + 2;
+  char *img1_path = malloc(img1_buff_len * sizeof(char));
+  if (img1_path == NULL) {
+    fprintf(stderr, "Error allocating buffer for image paths\n");
+    return NULL;
+  }
+
+  int bytes_wrote1 = snprintf(img1_path, img1_buff_len, "%s/%s", img_dir, d_name);
+  if (bytes_wrote1 < 0) {
+    fprintf(stderr, "Error form image path by joining %s + / + %s.\n", img_dir, d_name);
+    return NULL;
+  }
+
+  return img1_path;
+}
+
 int main(int argc, char **argv) {
    if (argc != 2) {
        fprintf(stderr, "Usage: %s <dir_with_images_files>\n", argv[0]);
@@ -116,43 +133,21 @@ int main(int argc, char **argv) {
    assert(sorted_entries == number_of_files);
 
    for (int i = 1; i < sorted_entries; i++) {
-
-     int img1_buff_len = strlen(img_dir) + strlen(namelist[i-1]->d_name) + 2;
-     char *img1_path = malloc(img1_buff_len * sizeof(char));
+     char *first_entry = namelist[i-1]->d_name;
+     char *img1_path = get_img_path(img_dir, first_entry);
      if (img1_path == NULL) {
-       fprintf(stderr, "Error allocating buffer for image paths\n");
+       fprintf(stderr, "Error forming image path for entry name %s\n", first_entry);
        free(namelist);
        closedir(dir);
        return -1;
      }
 
-     int img2_buff_len = strlen(img_dir) + strlen(namelist[i]->d_name) + 2;
-     char *img2_path = malloc(img2_buff_len * sizeof(char));
+     char *second_entry = namelist[i]->d_name;
+     char *img2_path = get_img_path(img_dir, second_entry);
      if (img2_path == NULL) {
-       fprintf(stderr, "Error allocating buffer for image paths\n");
+       fprintf(stderr, "Error forming image path for entry name %s\n", second_entry);
        free(namelist);
        closedir(dir);
-       free(img1_path);
-       return -1;
-     }
-
-     int bytes_wrote1 = snprintf(img1_path, img1_buff_len, "%s/%s", img_dir, namelist[i-1]->d_name);
-     if (bytes_wrote1 < 0) {
-       fprintf(stderr, "Error form image path by joining %s + / + %s.\n", img_dir, namelist[i-1]->d_name);
-       free(namelist);
-       closedir(dir);
-       free(img1_path);
-       free(img2_path);
-       return -1;
-     }
-
-     int bytes_wrote2 = snprintf(img2_path, img2_buff_len, "%s/%s", img_dir, namelist[i]->d_name);
-     if (bytes_wrote2 < 0) {
-       fprintf(stderr, "Error form image path by joining %s + / + %s.\n", img_dir, namelist[i]->d_name);
-       free(namelist);
-       closedir(dir);
-       free(img1_path);
-       free(img2_path);
        return -1;
      }
 
