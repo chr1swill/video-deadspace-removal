@@ -90,6 +90,60 @@ static inline void free_namelist(struct dirent **namelist, int length) {
 
 #define MAX_INPUT_LEN 256
 
+typedef enum {
+    MP4,
+    MKV,
+    AVI,
+    MOV,
+    FLV,
+    WMV,
+    MPEG,
+    WEBM,
+    M4V,
+    TS,
+    MTS,
+    VOB,
+    OGV,
+    GIF,
+    F4V,
+    RM,
+    DIVX,
+    XVID,
+    ASF
+} VideoFileFormat;
+
+#define DELIMITER "DELIMITER"
+
+const char *VideoFileFormatExtensions[] = {
+    ".mp4",
+    ".mkv",
+    ".avi",
+    ".mov",
+    ".flv",
+    ".wmv",
+    ".mpeg",
+    ".webm",
+    ".m4v",
+    ".ts",
+    ".mts",
+    ".vob",
+    ".ogv",
+    ".gif",
+    ".f4v",
+    ".rm",
+    ".divx",
+    ".xvid",
+    ".asf",
+    DELIMITER
+};
+
+static inline void display_allowed_file_ext(void){
+    printf("Allow input file extentions:\n");
+    for (int i = 0; ((strcmp(VideoFileFormatExtensions[i], DELIMITER))) != 0; i++) {
+      printf("\t.%s\n", VideoFileFormatExtensions[i]);
+    }
+}
+
 int main(int argc, char **argv) {
   // first read the name of the vide file from the command line
 
@@ -121,11 +175,37 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  printf("%s was found!\n", input_file_path);
+  char *file_ext = strstr(input_file_path, ".");
+  if (file_ext == NULL) {
+    fprintf(stderr, "Error provided file is an unsupported file type: %s\n", input_file_path);
+
+    display_allowed_file_ext();
+    free(input_file_path);
+    return -1;
+  }
+
+  printf("%s\n", file_ext);
+
+  int found = -1;
+  for (int i = 0; ((strcmp(VideoFileFormatExtensions[i], DELIMITER)) != 0) ; i++) {
+    if ((strcmp(VideoFileFormatExtensions[i], file_ext) == 0)) {
+      found = 0;
+      break;
+    }
+  } 
+
+  if (found != 0) {
+    fprintf(stderr, "Error provided file is an unsupported file type: %s\n", input_file_path);
+
+    display_allowed_file_ext();
+    free(input_file_path);
+    return -1;
+  }
+
   free(input_file_path);
   return 0;
 
-  // make sure it is not longer that char[256]
+
   // then fork that off into ffmpeg
   // if it is successfuly you can run the app but you choose the dir that it output too instead of the user choosing
   // we make the images into the dir we created
