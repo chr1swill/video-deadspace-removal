@@ -24,9 +24,7 @@ unsigned char* load_png(const char *filename) {
     png_init_io(png, fp);
     png_read_info(png, info);
 
-    int width = png_get_image_width(png, info);
     int height = png_get_image_height(png, info);
-    int color_type = png_get_color_type(png, info);
 
     png_bytep *rows = malloc(sizeof(png_bytep) * height);
     for (int y = 0; y < height; y++) {
