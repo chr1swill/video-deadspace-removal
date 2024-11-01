@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <dirent.h>
 #include <assert.h>
+#include <unistd.h>
 #include <png.h>
 
 #define WIDTH 1920
@@ -87,7 +88,49 @@ static inline void free_namelist(struct dirent **namelist, int length) {
   free(namelist);
 }
 
+#define MAX_INPUT_LEN 256
+
 int main(int argc, char **argv) {
+  // first read the name of the vide file from the command line
+
+  char *input_file_path = (char *)malloc(MAX_INPUT_LEN * sizeof(char));
+  if (input_file_path == NULL) {
+    fprintf(stderr, "Error allocating memory for the input file path\n");
+    return -1;
+  }
+
+  printf("Enter in you file name:\n");
+  fflush(STDIN_FILENO);
+
+  ssize_t bytes_read;
+  size_t i = 0; 
+  while (i < (MAX_INPUT_LEN -1 ) && 
+        (bytes_read = read(STDIN_FILENO, &input_file_path[i], 1)) > 0) {
+    assert(i < (MAX_INPUT_LEN - 1));
+    if (input_file_path[i] == '\n') break; 
+    i++;
+  }
+
+  input_file_path[i] = '\0';
+
+  struct stat st = {0};
+  int real_file = stat(input_file_path, &st);
+  if (real_file != 0) {
+    fprintf(stderr, "Could not find file: (%s)\n", input_file_path);
+    free(input_file_path);
+    return -1;
+  }
+
+  printf("%s was found!\n", input_file_path);
+  free(input_file_path);
+  return 0;
+
+  // make sure it is not longer that char[256]
+  // then fork that off into ffmpeg
+  // if it is successfuly you can run the app but you choose the dir that it output too instead of the user choosing
+  // we make the images into the dir we created
+  // after that we use ffmpeg to create a new new ouptut video file, called output or something, ensureing first that there is no file with that name already
+
    if (argc != 2) {
        fprintf(stderr, "Usage: %s <dir_with_images_files>\n", argv[0]);
        return -1;
@@ -95,7 +138,7 @@ int main(int argc, char **argv) {
 
    char *img_dir = argv[1];
 
-   struct stat st = {0};
+   //struct stat st = {0};
    int exist = stat(img_dir, &st);
    if (exist != 0) {
      fprintf(stderr, "Error invalid directory path %s: %s\n", img_dir, strerror(errno));
