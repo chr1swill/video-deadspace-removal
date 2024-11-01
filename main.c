@@ -76,13 +76,13 @@ int main(int argc, char **argv) {
    struct stat st = {0};
    int exist = stat(img_dir, &st);
    if (exist != 0) {
-     fprintf(stderr, "Error getting stats of dir: %s\n", strerror(errno));
+     fprintf(stderr, "Error invalid directory path %s: %s\n", img_dir, strerror(errno));
      return -1;
    }
 
    DIR *dir = opendir(img_dir);
    if (dir == NULL) {
-     fprintf(stderr, "Error opening dir: %s\n", strerror(errno));
+     fprintf(stderr, "Error opening dir %s: %s\n",  img_dir, strerror(errno));
      return -1;
    }
 
@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 
    int sorted_entries = scandir(img_dir, &namelist, filter_for_only_files, alphasort);
    if (sorted_entries == -1) {
-     fprintf(stderr, "Error scanning dir: %s\n", strerror(errno));
+     fprintf(stderr, "Error scanning dir %s: %s\n",  img_dir, strerror(errno));
      free(namelist);
      closedir(dir);
      return -1;
@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
 
      int bytes_wrote1 = snprintf(img1_path, img1_buff_len, "%s/%s", img_dir, namelist[i-1]->d_name);
      if (bytes_wrote1 < 0) {
-       fprintf(stderr, "Failed to load path form image into buffer image 1.\n");
+       fprintf(stderr, "Error form image path by joining %s + / + %s.\n", img_dir, namelist[i-1]->d_name);
        free(namelist);
        closedir(dir);
        free(img1_path);
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
 
      int bytes_wrote2 = snprintf(img2_path, img2_buff_len, "%s/%s", img_dir, namelist[i]->d_name);
      if (bytes_wrote2 < 0) {
-       fprintf(stderr, "Failed to load path form image into buffer for image 2.\n");
+       fprintf(stderr, "Error form image path by joining %s + / + %s.\n", img_dir, namelist[i]->d_name);
        free(namelist);
        closedir(dir);
        free(img1_path);
@@ -196,20 +196,5 @@ int main(int argc, char **argv) {
    }
    free(namelist);
    closedir(dir);
-   return 0;
-
-   unsigned char *img1 = load_png(img_dir);
-   unsigned char *img2 = load_png(argv[2]);
-
-   if (!img1 || !img2) {
-     fprintf(stderr, "Error loading images.\n");
-     return 1;
-   }
-
-   int diff = compare_images(img1, img2);
-   printf("Difference: %d\n", diff);
-
-   free(img1);
-   free(img2);
    return 0;
 }
