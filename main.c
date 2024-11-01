@@ -66,12 +66,12 @@ int filter_for_only_files(const struct dirent *entry) {
 };
 
 int main(int argc, char **argv) {
-   char *img_dir = argv[1];
-
    if (argc != 2) {
-       fprintf(stderr, "Usage: %s <dir_with_images_files>\n", img_dir);
+       fprintf(stderr, "Usage: %s <dir_with_images_files>\n", argv[0]);
        return -1;
    }
+
+   char *img_dir = argv[1];
 
    struct stat st = {0};
    int exist = stat(img_dir, &st);
