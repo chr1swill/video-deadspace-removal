@@ -2,4 +2,4 @@
 
 set xe
 
-gcc -o main main.c -lpng
+gcc -o main main.c -lpng -Wall -Wextra

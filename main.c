@@ -82,6 +82,13 @@ char *get_img_path(char *img_dir, char *d_name) {
   return img1_path;
 }
 
+static inline void free_namelist(struct dirent **namelist, int length) {
+  for (int i = 0; i < length; i++) {
+    free(namelist[i]);
+  }
+  free(namelist);
+}
+
 int main(int argc, char **argv) {
    if (argc != 2) {
        fprintf(stderr, "Usage: %s <dir_with_images_files>\n", argv[0]);
@@ -126,7 +133,8 @@ int main(int argc, char **argv) {
    int sorted_entries = scandir(img_dir, &namelist, filter_for_only_files, alphasort);
    if (sorted_entries == -1) {
      fprintf(stderr, "Error scanning dir %s: %s\n",  img_dir, strerror(errno));
-     free(namelist);
+
+     free_namelist(namelist, sorted_entries);
      closedir(dir);
      return -1;
    }
@@ -137,7 +145,8 @@ int main(int argc, char **argv) {
      char *img1_path = get_img_path(img_dir, first_entry);
      if (img1_path == NULL) {
        fprintf(stderr, "Error forming image path for entry name %s\n", first_entry);
-       free(namelist);
+
+       free_namelist(namelist, sorted_entries);
        closedir(dir);
        return -1;
      }
@@ -146,7 +155,8 @@ int main(int argc, char **argv) {
      char *img2_path = get_img_path(img_dir, second_entry);
      if (img2_path == NULL) {
        fprintf(stderr, "Error forming image path for entry name %s\n", second_entry);
-       free(namelist);
+
+       free_namelist(namelist, sorted_entries);
        closedir(dir);
        return -1;
      }
@@ -157,10 +167,7 @@ int main(int argc, char **argv) {
      if (img1 == NULL || img2 == NULL) {
        fprintf(stderr, "Error loading images.\n");
 
-       for (int i = 0; i < sorted_entries; i++) {
-         free(namelist[i]);
-       }
-       free(namelist);
+       free_namelist(namelist, sorted_entries);
        closedir(dir);
        free(img1_path);
        free(img2_path);
@@ -184,10 +191,7 @@ int main(int argc, char **argv) {
      free(img2);
    }
 
-   for (int i = 0; i < sorted_entries; i++) {
-     free(namelist[i]);
-   }
-   free(namelist);
+   free_namelist(namelist, sorted_entries);
    closedir(dir);
    return 0;
 }
