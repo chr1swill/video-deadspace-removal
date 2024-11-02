@@ -202,14 +202,48 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  // then fork that off into ffmpeg
+  char *digits_in_img_paths = "%10d";
+  char *command = "mkdir -p output && ffmpeg -i %s ./output/%s.png";
+  int command_buff_len = (strlen(command) + 1 + strlen(input_file_path) + 1 + strlen(digits_in_img_paths) + 1) * sizeof(char);
+  char *command_buff = (char *)malloc(command_buff_len);
+  if (command_buff == NULL) {
+    fprintf(stderr, "Error allocating buffer for ffmpeg command\n");
+    free(input_file_path);
+    return -1;
+  }
+
+  int ok = snprintf(command_buff, command_buff_len, command, input_file_path, digits_in_img_paths);
+  if (ok < 0) {
+    fprintf(stderr, "Error creating command for ffmpeg\n"); 
+    free(input_file_path);
+    free(command_buff);
+    return -1;
+  }
+
+  printf("running command: %s\n", command_buff);
   free(input_file_path);
   return 0;
 
+  int command_result = system(command_buff);
+  if (command_result != 0) {
+    fprintf(stderr, "Error occured running command: %s\n", command_buff);
+    free(input_file_path);
+    free(command_buff);
+    return -1;
+  }
 
-  // then fork that off into ffmpeg
+  // TODO: test with real input to see if the syscall works
+
+  free(input_file_path);
+  return 0;
+
+  
   // if it is successfuly you can run the app but you choose the dir that it output too instead of the user choosing
+ 
   // we make the images into the dir we created
-  // after that we use ffmpeg to create a new new ouptut video file, called output or something, ensureing first that there is no file with that name already
+  
+  // after that we use ffmpeg to create a new new ouptut video file, called output or something, ensuring first that there is no file with that name already
 
    if (argc != 2) {
        fprintf(stderr, "Usage: %s <dir_with_images_files>\n", argv[0]);
