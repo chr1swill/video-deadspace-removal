@@ -379,9 +379,35 @@ int main(void) {
    free_namelist(namelist, sorted_entries);
    closedir(dir);
 
-
    // TODO reorder files with correct numbers
    // run ffmpeg to reassemble everything
-   
+
+   char *final_command = "rm -rf ./final && mkdir -p ./final && "
+     "ffmpeg -framerate 60 -start_number 1 -i ./output/%s.png -c:v libx264 -pix_fmt yuv420p ./final/output.mkv";
+
+   int final_command_buff_len = (256 * sizeof(char));
+
+   char *final_command_buff = (char *)malloc(final_command_buff_len);
+   if (final_command_buff == NULL) {
+     fprintf(stderr, "Error allocating buffer for ffmpeg final command\n");
+     return -1;
+   }
+
+   int okay = snprintf(final_command_buff, final_command_buff_len,
+                      final_command, digits_in_img_paths);
+   if (okay < 0) {
+     fprintf(stderr, "Error creating final command for ffmpeg\n"); 
+     free(final_command_buff);
+     return -1;
+   }
+
+   int final_command_result = system(final_command_buff);
+   if (final_command_result != 0) {
+     fprintf(stderr, "Error occured running final command %s: %s\n", final_command_buff, strerror(errno));
+     free(final_command_buff);
+     return -1;
+   }
+
+   free(final_command_buff);
    return 0;
 }
