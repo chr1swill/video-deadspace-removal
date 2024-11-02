@@ -144,7 +144,7 @@ static inline void display_allowed_file_ext(void){
     }
 }
 
-int main(int argc, char **argv) {
+int main(void) {
   // first read the name of the vide file from the command line
 
   char *input_file_path = (char *)malloc(MAX_INPUT_LEN * sizeof(char));
@@ -202,11 +202,12 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  char *output_dir = "./output";
   // then fork that off into ffmpeg
   char *digits_in_img_paths = "%10d";
-  char *command = "mkdir -p output && ffmpeg -i %s ./output/%s.png";
+  char *command = "mkdir -p output && ffmpeg -i %s %s/%s.png";
   int command_buff_len = ((strlen(command) + 1 + strlen(input_file_path) + 1 + 
-                          strlen(digits_in_img_paths) + 1) * sizeof(char));
+                          strlen(output_dir) + 1 + strlen(digits_in_img_paths) + 1) * sizeof(char));
 
   char *command_buff = (char *)malloc(command_buff_len);
   if (command_buff == NULL) {
@@ -215,7 +216,8 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  int ok = snprintf(command_buff, command_buff_len, command, input_file_path, digits_in_img_paths);
+  int ok = snprintf(command_buff, command_buff_len, command,
+                    input_file_path, output_dir, digits_in_img_paths);
   if (ok < 0) {
     fprintf(stderr, "Error creating command for ffmpeg\n"); 
     free(input_file_path);
@@ -231,31 +233,13 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  // TODO: test with real input to see if the syscall works
-
-  free(input_file_path);
-  return 0;
-
-  
   // if it is successfuly you can run the app but you choose the dir that it output too instead of the user choosing
- 
-  // we make the images into the dir we created
+  free(input_file_path);
+  free(command_buff);
   
-  // after that we use ffmpeg to create a new new ouptut video file, called output or something, ensuring first that there is no file with that name already
+  // we make the images into the dir we created
 
-   if (argc != 2) {
-       fprintf(stderr, "Usage: %s <dir_with_images_files>\n", argv[0]);
-       return -1;
-   }
-
-   char *img_dir = argv[1];
-
-   //struct stat st = {0};
-   int exist = stat(img_dir, &st);
-   if (exist != 0) {
-     fprintf(stderr, "Error invalid directory path %s: %s\n", img_dir, strerror(errno));
-     return -1;
-   }
+   char *img_dir = output_dir;
 
    DIR *dir = opendir(img_dir);
    if (dir == NULL) {
@@ -344,7 +328,38 @@ int main(int argc, char **argv) {
      free(img2);
    }
 
+   const int path_buffer_size = 32;
+   char old_name_buffer[path_buffer_size];
+   char new_name_buffer[path_buffer_size];
+   for (int i = 1; i < sorted_entries; i++) {
+     int ret = -1;
+     ret = snprintf(old_name_buffer, path_buffer_size, "%s/%s", img_dir, namelist[i]->d_name);
+     if (ret < 0) {
+       fprintf(stderr, "Error creating buffer for old path: %s/%s\n", img_dir, namelist[i]->d_name);
+       free_namelist(namelist, sorted_entries);
+       closedir(dir);
+       return -1;
+     }
+
+     ret = snprintf(new_name_buffer, path_buffer_size, "%s/%10d.png", img_dir, i);
+     if (ret < 0) {
+       fprintf(stderr, "Error creating buffer for new path: %s/%10d.png\n", img_dir, i);
+       free_namelist(namelist, sorted_entries);
+       closedir(dir);
+       return -1;
+     }
+
+     rename(old_name_buffer, new_name_buffer);
+     memset(old_name_buffer, path_buffer_size, sizeof(char));
+     memset(new_name_buffer, path_buffer_size, sizeof(char));
+   }
+
    free_namelist(namelist, sorted_entries);
    closedir(dir);
+
+
+   // TODO reorder files with correct numbers
+   // run ffmpeg to reassemble everything
+   
    return 0;
 }
