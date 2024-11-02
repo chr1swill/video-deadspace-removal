@@ -205,7 +205,9 @@ int main(int argc, char **argv) {
   // then fork that off into ffmpeg
   char *digits_in_img_paths = "%10d";
   char *command = "mkdir -p output && ffmpeg -i %s ./output/%s.png";
-  int command_buff_len = (strlen(command) + 1 + strlen(input_file_path) + 1 + strlen(digits_in_img_paths) + 1) * sizeof(char);
+  int command_buff_len = ((strlen(command) + 1 + strlen(input_file_path) + 1 + 
+                          strlen(digits_in_img_paths) + 1) * sizeof(char));
+
   char *command_buff = (char *)malloc(command_buff_len);
   if (command_buff == NULL) {
     fprintf(stderr, "Error allocating buffer for ffmpeg command\n");
@@ -220,10 +222,6 @@ int main(int argc, char **argv) {
     free(command_buff);
     return -1;
   }
-
-  printf("running command: %s\n", command_buff);
-  free(input_file_path);
-  return 0;
 
   int command_result = system(command_buff);
   if (command_result != 0) {
