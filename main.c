@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
 
   int command_result = system(command_buff);
   if (command_result != 0) {
-    fprintf(stderr, "Error occured running command: %s\n", command_buff);
+    fprintf(stderr, "Error occured running command %s: %s\n", command_buff, strerror(errno));
     free(input_file_path);
     free(command_buff);
     return -1;
