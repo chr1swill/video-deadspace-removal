@@ -45,11 +45,18 @@ unsigned char* load_png(const char *filename) {
     return data;
 }
 
+#define TOO_DIFF 100
+
 // Function to compare two images
 int compare_images(unsigned char *img1, unsigned char *img2) {
     int diff = 0;
     for (int i = 0; i < WIDTH * HEIGHT * CHANNELS; i++) {
+      if (diff < TOO_DIFF) {
         diff += abs(img1[i] - img2[i]);
+        continue;
+      } else {
+        break;
+      }
     }
     return diff;
 }
@@ -204,8 +211,8 @@ int main(void) {
 
   char *output_dir = "./output";
   // then fork that off into ffmpeg
-  char *digits_in_img_paths = "%10d";
-  char *command = "mkdir -p output && ffmpeg -i %s %s/%s.png";
+  char *digits_in_img_paths = "%09d";
+  char *command = "rm -rf output && mkdir -p output && ffmpeg -i %s %s/%s.png";
   int command_buff_len = ((strlen(command) + 1 + strlen(input_file_path) + 1 + 
                           strlen(output_dir) + 1 + strlen(digits_in_img_paths) + 1) * sizeof(char));
 
@@ -328,10 +335,15 @@ int main(void) {
      free(img2);
    }
 
-   const int path_buffer_size = 32;
+   // TODO: fix odd looking imag paths
+   const int path_buffer_size = 24;
    char old_name_buffer[path_buffer_size];
    char new_name_buffer[path_buffer_size];
-   for (int i = 1; i < sorted_entries; i++) {
+   int img_count = 1;
+   for (int i = 0; i < sorted_entries; i++) {
+     memset(old_name_buffer, path_buffer_size, sizeof(char));
+     memset(new_name_buffer, path_buffer_size, sizeof(char));
+
      int ret = -1;
      ret = snprintf(old_name_buffer, path_buffer_size, "%s/%s", img_dir, namelist[i]->d_name);
      if (ret < 0) {
@@ -341,17 +353,27 @@ int main(void) {
        return -1;
      }
 
-     ret = snprintf(new_name_buffer, path_buffer_size, "%s/%10d.png", img_dir, i);
+     if ((stat(old_name_buffer, &st)) != 0) {
+       continue;
+     }
+
+     ret = snprintf(new_name_buffer, path_buffer_size, "%s/%09d.png", img_dir, img_count);
      if (ret < 0) {
-       fprintf(stderr, "Error creating buffer for new path: %s/%10d.png\n", img_dir, i);
+       fprintf(stderr, "Error creating buffer for new path: %s/%09d.png\n", img_dir, img_count);
        free_namelist(namelist, sorted_entries);
        closedir(dir);
        return -1;
      }
 
-     rename(old_name_buffer, new_name_buffer);
-     memset(old_name_buffer, path_buffer_size, sizeof(char));
-     memset(new_name_buffer, path_buffer_size, sizeof(char));
+     if ((rename(old_name_buffer, new_name_buffer)) == -1) {
+       fprintf(stderr, "Error renaming %s to %s: %s\n", old_name_buffer, new_name_buffer, strerror(errno));
+       free_namelist(namelist, sorted_entries);
+       closedir(dir);
+       return -1;
+     }
+
+     printf("renamed: old_name = (%s), new_name = (%s)\n", old_name_buffer, new_name_buffer);
+     img_count++;
    }
 
    free_namelist(namelist, sorted_entries);
