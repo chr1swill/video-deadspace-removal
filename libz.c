@@ -26,7 +26,7 @@ unsigned char* load_png_v2(const char *filename) {
     unsigned char *data = malloc(WIDTH * HEIGHT * CHANNELS);
     for (int y = 0; y < HEIGHT; y++) {
         memcpy(data + y * WIDTH * CHANNELS, rows[y], WIDTH * CHANNELS);
-        //free(rows[y]);
+        free(rows[y]);
     }
     //free(rows);
     png_destroy_read_struct(&png, &info, NULL);

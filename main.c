@@ -157,8 +157,8 @@ int main(void) {
        return -1;
      }
 
-     unsigned char *img1 = load_png(img1_path);
-     unsigned char *img2 = load_png(img2_path);
+     unsigned char *img1 = load_png_v2(img1_path);
+     unsigned char *img2 = load_png_v2(img2_path);
 
      if (img1 == NULL || img2 == NULL) {
        fprintf(stderr, "Error loading images.\n");
