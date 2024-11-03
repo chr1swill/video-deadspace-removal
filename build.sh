@@ -8,7 +8,7 @@ CFLAGS="-O3 -Wall -Wextra"
 
 for arg in "$@"; do
   if [ "$arg" = "--debug" ]; then 
-    CFLAGS="$CFLAGS -ggdb"
+    CFLAGS="$CFLAGS -ggdb -pg"
   fi
 done
 
