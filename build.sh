@@ -7,7 +7,7 @@ mkdir -p bin
 CFLAGS="-O3 -Wall -Wextra"
 
 for arg in "@"; do
-  if ["$arg" = "--debug"]; then 
+  if [ "$arg" = "--debug" ]; then 
     CFLAGS="$CFLAGS -ggdb"
   fi
 done
