@@ -1,12 +1,12 @@
 #!/bin/sh
 
-set xe
+set -xe
 
 mkdir -p bin
 
 CFLAGS="-O3 -Wall -Wextra"
 
-for arg in "@"; do
+for arg in "$@"; do
   if [ "$arg" = "--debug" ]; then 
     CFLAGS="$CFLAGS -ggdb"
   fi
@@ -26,4 +26,4 @@ else
   LIBRARY_PATH=""
 fi
 
-gcc -o bin/main main.c ${INCLUDE_PATH} ${LIBRARY_PATH} -lpng ${CFLAGS}
+gcc -o bin/main main.c ${INCLUDE_PATH} ${LIBRARY_PATH} -lpng $CFLAGS
