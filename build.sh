@@ -4,6 +4,14 @@ set xe
 
 mkdir -p bin
 
+CFLAGS="-O3 -Wall -Wextra"
+
+for arg in "@"; do
+  if ["$arg" = "--debug"]; then 
+    CFLAGS="$CFLAGS -ggdb"
+  fi
+done
+
 if [ "$(uname)" = "Darwin" ]; then
 
   if [ -d "/opt/homebrew" ]; then 
@@ -18,4 +26,4 @@ else
   LIBRARY_PATH=""
 fi
 
-gcc -o bin/main main.c ${INCLUDE_PATH} ${LIBRARY_PATH} -lpng -O3 -Wall -Wextra
+gcc -o bin/main main.c ${INCLUDE_PATH} ${LIBRARY_PATH} -lpng ${CFLAGS}
