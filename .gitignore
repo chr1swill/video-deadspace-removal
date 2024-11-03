@@ -2,3 +2,5 @@ input.mkv
 output/
 final/
 bin/
+perf.*
+gmon.*
