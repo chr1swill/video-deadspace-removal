@@ -26,4 +26,4 @@ else
   LIBRARY_PATH=""
 fi
 
-gcc -o bin/main main.c ${INCLUDE_PATH} ${LIBRARY_PATH} -lpng $CFLAGS
+gcc -o bin/main main.c libz.c ${INCLUDE_PATH} ${LIBRARY_PATH} -lpng $CFLAGS
