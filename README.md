@@ -29,7 +29,7 @@ good luck!
 ### Building Source
 
 ```bash
-./build.sh
+make main
 ```
 
 ## Ussage
